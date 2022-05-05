@@ -1,5 +1,6 @@
 from cgitb import lookup
 import imp
+from urllib import response
 from django.shortcuts import render
 from rest_framework.generics import CreateAPIView,ListAPIView,ListCreateAPIView,RetrieveUpdateDestroyAPIView
 
@@ -7,7 +8,7 @@ from todos.models import Todo
 
 from .serializers import TodoSerializer
 from rest_framework.permissions import IsAuthenticated
-from rest_framework import permissions,filters
+from rest_framework import permissions,filters,status,response
 from django_filters.rest_framework import DjangoFilterBackend
 from .pagination import CustomPageNumberPagination
 # Create your views here.
@@ -28,7 +29,11 @@ class TodosApiView(ListCreateAPIView):
 
 
     def perform_create(self,serializer):
-        return serializer.save(owner=self.request.user)
+        if serializer.is_valid():
+            serializer.save(owner=self.request.user)
+            return response.Response(serializer.data,status=status.HTTP_201_CREATED)
+        return response.Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+    
 
 
     def get_queryset(self):
